@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "",
+      "hasCanvas": false,
+      "bodyTextLen": 1112,
+      "bodyTextHash": "4bfb8b9cca150ce7c00b27ab93ee2c586adebdfb2876f3a1333f7f3152c3b551",
+      "bodyTextPrefix": "Terminal Mobile Grok Plain language. Reads a public page only wh",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "AI Terminal Mobile",
+      "hasCanvas": false,
+      "bodyTextLen": 280,
+      "bodyTextHash": "8f41b4fe16c03fca29c75ece6e8033e570511993cf834e7b544b84d6f6a9de10",
+      "bodyTextPrefix": "Terminal Grok The session is idle. Talk normally, or send a comm",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}
