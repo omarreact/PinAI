@@ -1,8 +1,8 @@
 import { assertPublicUrl, PublicUrlError, SafeError } from "./guard.server.ts";
 import type { Hop } from "./types";
 
-export { REQUEST_HEADERS } from "./reader-types";
-export type { FetchHit } from "./reader-types";
+export { REQUEST_HEADERS } from "./reader-types.ts";
+export type { FetchHit } from "./reader-types.ts";
 import { REQUEST_HEADERS, type FetchHit } from "./reader-types.ts";
 
 type ReaderOptions = {
