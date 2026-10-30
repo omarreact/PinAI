@@ -1,26 +1,9 @@
 import { assertPublicUrl, PublicUrlError, SafeError } from "./guard.server.ts";
-import type { HeaderPair, Hop } from "./types";
+import type { Hop } from "./types";
 
-export const REQUEST_HEADERS: HeaderPair[] = [
-  { name: "user-agent", value: "PinAI/1.1 (public page reader)" },
-  { name: "accept", value: "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8" },
-  { name: "accept-language", value: "en" },
-];
-
-export type FetchHit = {
-  requestedUrl: string;
-  finalUrl: string;
-  status: number;
-  ms: number;
-  contentType: string | null;
-  redirects: Hop[];
-  headers: HeaderPair[];
-  text: string;
-  bytes: number;
-  truncated: boolean;
-  textual: boolean;
-  timings: { headersMs: number; bodyMs: number; totalMs: number };
-};
+export { REQUEST_HEADERS } from "./reader-types.ts";
+export type { FetchHit } from "./reader-types.ts";
+import { REQUEST_HEADERS, type FetchHit } from "./reader-types.ts";
 
 type ReaderOptions = {
   timeoutMs?: number;
