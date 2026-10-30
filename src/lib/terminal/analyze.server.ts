@@ -1,19 +1,14 @@
-import { fingerprint, meta, pageExcerpt, pageTitle } from "./fingerprint";
-import { PublicUrlError, SafeError, assertPublicUrl, toSafeMessage } from "./guard.server";
-import type { HeaderPair, Hop, ToolName, WebReport } from "./types";
+import { fingerprint, meta, pageExcerpt, pageTitle } from "./fingerprint.ts";
+import { toSafeMessage } from "./guard.server.ts";
+import { requestPublic, REQUEST_HEADERS, type FetchHit } from "./request.server.ts";
+import { reportFindings, COMPARED_HEADERS } from "./report-utils.ts";
+import type { HeaderPair, ToolName, WebReport } from "./types";
 
 /**
  * One public GET, plus at most two polite extras (robots.txt, and
  * /wp-json/ when the page already looks like WordPress).
  * Paths found in the markup are listed. They are not crawled.
  */
-
-const UA = "AITerminalMobile/1.0 (public page reader)";
-const REQUEST_HEADERS: HeaderPair[] = [
-  { name: "user-agent", value: UA },
-  { name: "accept", value: "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8" },
-  { name: "accept-language", value: "en" },
-];
 
 const PREFERRED_HEADERS = [
   "server",
@@ -26,21 +21,11 @@ const PREFERRED_HEADERS = [
   "location",
   "strict-transport-security",
   "content-security-policy",
+  "x-frame-options",
+  "x-content-type-options",
+  "referrer-policy",
+  "permissions-policy",
 ];
-
-type FetchHit = {
-  requestedUrl: string;
-  finalUrl: string;
-  status: number;
-  ms: number;
-  contentType: string | null;
-  redirects: Hop[];
-  headers: HeaderPair[];
-  text: string;
-  bytes: number;
-  truncated: boolean;
-  textual: boolean;
-};
 
 export async function analyzePublicPage(rawUrl: string, mode: ToolName): Promise<WebReport> {
   const main = await requestPublic(rawUrl, 1_200_000);
@@ -58,6 +43,8 @@ export async function analyzePublicPage(rawUrl: string, mode: ToolName): Promise
     finalUrl: main.finalUrl,
     status: main.status,
     ms: main.ms,
+    timings: main.timings,
+    retrievedAt: new Date().toISOString(),
     contentType: main.contentType,
     redirects: main.redirects,
     title: html ? pageTitle(html) : null,
@@ -81,6 +68,7 @@ export async function analyzePublicPage(rawUrl: string, mode: ToolName): Promise
   if (mode === "scan" || mode === "apis") {
     report.probes = await extraProbes(main.finalUrl, html);
   }
+  report.findings = reportFindings(report);
   return report;
 }
 
@@ -119,138 +107,12 @@ async function probe(rawUrl: string): Promise<WebReport["probes"][number]> {
   }
 }
 
-async function requestPublic(rawUrl: string, maxBytes: number): Promise<FetchHit> {
-  let current = await assertPublicUrl(rawUrl);
-  const requestedUrl = current.href;
-  const redirects: Hop[] = [];
-  const seen = new Set<string>();
-
-  for (let hop = 0; hop < 5; hop += 1) {
-    if (seen.has(current.href)) throw new SafeError("The redirects looped.");
-    seen.add(current.href);
-
-    const started = Date.now();
-    const response = await fetchOnce(current);
-    const ms = Date.now() - started;
-    redirects.push({ url: current.href, status: response.status, ms });
-
-    if (isRedirect(response.status)) {
-      const location = response.headers.get("location");
-      await response.body?.cancel();
-      if (!location) break;
-      let next: URL;
-      try {
-        next = await assertPublicUrl(new URL(location, current).href);
-      } catch (err) {
-        if (err instanceof PublicUrlError || err instanceof SafeError) throw err;
-        throw new PublicUrlError("A redirect left the public web and was blocked.");
-      }
-      current = next;
-      continue;
-    }
-
-    const contentType = response.headers.get("content-type");
-    const headers = collectHeaders(response.headers);
-    const textual = isTextual(contentType);
-    let text = "";
-    let bytes = 0;
-    let truncated = false;
-    if (textual) {
-      const body = await readLimited(response, maxBytes);
-      text = body.text;
-      bytes = body.bytes;
-      truncated = body.truncated;
-    } else {
-      const length = Number(response.headers.get("content-length"));
-      bytes = Number.isFinite(length) ? length : 0;
-      await response.body?.cancel();
-    }
-
-    return {
-      requestedUrl,
-      finalUrl: current.href,
-      status: response.status,
-      ms: redirects.reduce((sum, item) => sum + item.ms, 0),
-      contentType,
-      redirects,
-      headers,
-      text,
-      bytes,
-      truncated,
-      textual,
-    };
-  }
-
-  throw new SafeError("Too many redirects.");
-}
-
-async function fetchOnce(url: URL): Promise<Response> {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 12_000);
-  try {
-    return await fetch(url, {
-      method: "GET",
-      redirect: "manual",
-      signal: ctrl.signal,
-      cache: "no-store",
-      headers: {
-        "user-agent": UA,
-        accept: REQUEST_HEADERS[1].value,
-        "accept-language": "en",
-      },
-    });
-  } catch (err) {
-    if (err instanceof Error && err.name === "AbortError") {
-      throw new SafeError("The host took too long to answer.");
-    }
-    throw new SafeError("Could not reach that host.");
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function readLimited(res: Response, maxBytes: number): Promise<{ text: string; bytes: number; truncated: boolean }> {
-  const reader = res.body?.getReader();
-  if (!reader) return { text: "", bytes: 0, truncated: false };
-  const chunks: Uint8Array[] = [];
-  let bytes = 0;
-  let truncated = false;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (!value) continue;
-    if (bytes + value.byteLength > maxBytes) {
-      const room = maxBytes - bytes;
-      if (room > 0) chunks.push(value.slice(0, room));
-      bytes = maxBytes;
-      truncated = true;
-      await reader.cancel();
-      break;
-    }
-    chunks.push(value);
-    bytes += value.byteLength;
-  }
-  const buf = new Uint8Array(bytes);
-  let offset = 0;
-  for (const chunk of chunks) {
-    buf.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return { text: new TextDecoder("utf-8", { fatal: false }).decode(buf), bytes, truncated };
-}
-
-function collectHeaders(headers: Headers): HeaderPair[] {
-  const pairs: HeaderPair[] = [];
-  headers.forEach((value, name) => {
-    pairs.push({ name: name.toLowerCase(), value });
-  });
-  return pairs;
-}
-
 function redactHeaders(headers: HeaderPair[]): HeaderPair[] {
   const hidden = new Set(["set-cookie", "cookie", "authorization", "proxy-authorization"]);
   const cookieCount = headers.filter((header) => header.name === "set-cookie").length;
-  const visible = headers.filter((header) => !hidden.has(header.name) && !/token|api-key|secret/i.test(header.name));
+  const visible = headers.filter(
+    (header) => !hidden.has(header.name) && !/token|api-key|secret/i.test(header.name),
+  );
   visible.sort((a, b) => {
     const ai = PREFERRED_HEADERS.indexOf(a.name);
     const bi = PREFERRED_HEADERS.indexOf(b.name);
@@ -259,10 +121,18 @@ function redactHeaders(headers: HeaderPair[]): HeaderPair[] {
   });
   const clipped = visible.slice(0, 36).map((header) => ({
     name: header.name,
-    value: header.value.length > 300 ? header.value.slice(0, 300) + "…" : header.value,
+    // Policy tails can contain frame-ancestors and other meaningful changes.
+    // Preserve the complete values used for findings and comparisons.
+    value:
+      !COMPARED_HEADERS.includes(header.name) && header.value.length > 300
+        ? header.value.slice(0, 300) + "…"
+        : header.value,
   }));
   if (cookieCount > 0) {
-    clipped.push({ name: "set-cookie", value: cookieCount === 1 ? "(hidden)" : `(hidden, ${cookieCount})` });
+    clipped.push({
+      name: "set-cookie",
+      value: cookieCount === 1 ? "(hidden)" : `(hidden, ${cookieCount})`,
+    });
   }
   return clipped;
 }
@@ -280,11 +150,6 @@ function excerptFor(hit: FetchHit): string | null {
 function isMarkup(hit: FetchHit): boolean {
   const type = hit.contentType ?? "";
   return /html|xml|svg/.test(type) || /^\s*</.test(hit.text);
-}
-
-function isTextual(contentType: string | null): boolean {
-  if (!contentType) return true;
-  return /text\/|json|xml|javascript|svg|urlencoded/.test(contentType);
 }
 
 function looksLikeJson(text: string): boolean {
@@ -317,10 +182,6 @@ function jsonKeys(text: string): string | null {
     if (!keys.includes(match[1])) keys.push(match[1]);
   }
   return keys.length ? "keys: " + keys.join(", ") : null;
-}
-
-function isRedirect(status: number): boolean {
-  return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
 }
 
 function clip(value: string, max: number): string {

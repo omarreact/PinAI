@@ -77,6 +77,8 @@ export const HELP_TEXT = `Commands, one job at a time:
 /session
 /help
 
+Use Read again on a report to compare it with the previous read of the same page. Reports and sessions can be saved as JSON or Markdown. Search the session from the header; press / outside a text field to focus the composer.
+
 Grok accepts a normal sentence. Web scan, Network, and Stack treat a domain as the job. Command runs only what you type.
 
 Private networks, raw shell, and other vendors' CLIs are not part of this session.`;

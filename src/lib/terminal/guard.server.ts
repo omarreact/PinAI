@@ -69,7 +69,7 @@ export function normalizeHttpUrl(raw: string): URL {
     throw new PublicUrlError("Only public pages on port 80 or 443 can be read.");
   }
 
-  let host = url.hostname.toLowerCase().replace(/\.$/, "");
+  const host = url.hostname.toLowerCase().replace(/\.$/, "");
   if (!host || host.includes("%")) {
     throw new PublicUrlError("That does not look like a public web address.");
   }

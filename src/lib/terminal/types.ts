@@ -12,6 +12,13 @@ export type ProbeHit = { url: string; status: number; note: string };
 
 export type Hop = { url: string; status: number; ms: number };
 
+export type ReportFinding = {
+  id: string;
+  level: "pass" | "warning" | "info";
+  title: string;
+  detail: string;
+};
+
 export type WebReport = {
   mode: ToolName;
   requestedUrl: string;
@@ -32,6 +39,10 @@ export type WebReport = {
   excerpt: string | null;
   truncated: boolean;
   bytes: number;
+  /** Optional so reports saved by earlier versions remain readable. */
+  retrievedAt?: string;
+  timings?: { headersMs: number; bodyMs: number; totalMs: number };
+  findings?: ReportFinding[];
 };
 
 export type HistoryItem = { role: "user" | "assistant"; text: string };
