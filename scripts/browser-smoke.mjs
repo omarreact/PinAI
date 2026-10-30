@@ -97,7 +97,7 @@ try {
 
   const viewports = {};
   for (const vp of VIEWPORTS) {
-    const errors = { consoleErrors: [], pageErrors: [] };
+    const errors = { consoleErrors: [], pageErrors: [], requestFailures: [] };
     const page = await browser.newPage({
       viewport: { width: vp.width, height: vp.height },
     });
@@ -105,6 +105,12 @@ try {
       if (msg.type() === "error") errors.consoleErrors.push(msg.text());
     });
     page.on("pageerror", (err) => errors.pageErrors.push(String(err?.message || err)));
+    page.on("requestfailed", (request) => {
+      errors.requestFailures.push({
+        url: request.url(),
+        error: request.failure()?.errorText ?? "Request failed",
+      });
+    });
     // `domcontentloaded`, not `networkidle`: Vite keeps an HMR websocket open, so
     // networkidle never settles and would burn the whole timeout.
     const resp = await page.goto(url, { waitUntil: "domcontentloaded", timeout: timeoutMs });
@@ -136,6 +142,7 @@ try {
       horizontalOverflow,
       consoleErrors: errors.consoleErrors,
       pageErrors: errors.pageErrors,
+      requestFailures: errors.requestFailures,
       screenshot: vp.screenshot,
     };
   }

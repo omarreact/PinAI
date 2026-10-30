@@ -1,17 +1,35 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { ARCHITECTURE, LIVE_ENGINES, UNAVAILABLE_ENGINES, engineById } from "@/lib/terminal/engines";
+import {
+  ARCHITECTURE,
+  LIVE_ENGINES,
+  UNAVAILABLE_ENGINES,
+  engineById,
+} from "@/lib/terminal/engines";
 import { hostLabel } from "@/lib/terminal/route";
 import { useTerminal } from "@/lib/terminal/store";
 import { cn } from "@/lib/cn";
+import { downloadText } from "@/lib/terminal/download";
+import { sessionMarkdown } from "@/lib/terminal/report-utils";
 
-export function EngineSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function EngineSheet({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const engineId = useTerminal((state) => state.engineId);
   const setEngine = useTerminal((state) => state.setEngine);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange} title="Engine" description="Choose what a message does.">
+    <Sheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Engine"
+      description="Choose what a message does."
+    >
       <ul className="flex flex-col gap-2">
         {LIVE_ENGINES.map((engine) => {
           const selected = engine.id === engineId;
@@ -49,33 +67,53 @@ export function EngineSheet({ open, onOpenChange }: { open: boolean; onOpenChang
   );
 }
 
-export function SessionSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function SessionSheet({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const engineId = useTerminal((state) => state.engineId);
   const lastUrl = useTerminal((state) => state.lastUrl);
   const notes = useTerminal((state) => state.notes);
   const turns = useTerminal((state) => state.turns);
   const clear = useTerminal((state) => state.clear);
+  const messages = useTerminal((state) => state.messages);
+  const exportedMessages = messages.filter((message) => !message.pending).slice(-40);
   const [confirm, setConfirm] = useState(false);
   const engine = engineById(engineId);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange} title="Session" description="What this chat keeps, and what it refuses.">
+    <Sheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Session"
+      description="What this chat keeps, and what it refuses."
+    >
       <dl className="grid grid-cols-2 gap-3">
         <Stat label="Engine" value={engine.name} />
         <Stat label="Turns" value={String(turns)} />
         <div className="col-span-2">
           <dt className="text-xs text-muted">Last site</dt>
-          <dd className="mt-1 break-all font-mono text-sm">{lastUrl ? hostLabel(lastUrl) : "None yet"}</dd>
+          <dd className="mt-1 break-all font-mono text-sm">
+            {lastUrl ? hostLabel(lastUrl) : "None yet"}
+          </dd>
         </div>
       </dl>
 
       <h3 className="mb-2 mt-6 text-sm font-medium">Notes</h3>
       {notes.length === 0 ? (
-        <p className="text-sm text-muted">No notes yet. Send /note and a line to keep it on this device.</p>
+        <p className="text-sm text-muted">
+          No notes yet. Send /note and a line to keep it on this device.
+        </p>
       ) : (
         <ul className="flex flex-col gap-2">
           {notes.map((note, index) => (
-            <li key={`${note}-${index}`} className="rounded-md border border-border bg-background px-3 py-2 text-sm">
+            <li
+              key={`${note}-${index}`}
+              className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+            >
               {note}
             </li>
           ))}
@@ -91,6 +129,44 @@ export function SessionSheet({ open, onOpenChange }: { open: boolean; onOpenChan
           </li>
         ))}
       </ol>
+
+      <h3 className="mb-2 mt-6 text-sm font-medium">Export this session</h3>
+      <p className="mb-3 text-sm text-muted">
+        Save completed messages, reports and notes from this device.
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          className="press h-11 rounded-md border border-border text-sm"
+          onClick={() => {
+            const data = {
+              version: 1,
+              exportedAt: new Date().toISOString(),
+              engine: engineId,
+              turns,
+              lastUrl,
+              notes,
+              messages: exportedMessages,
+            };
+            downloadText("pinai-session.json", JSON.stringify(data, null, 2), "application/json");
+          }}
+        >
+          Save JSON
+        </button>
+        <button
+          type="button"
+          className="press h-11 rounded-md border border-border text-sm"
+          onClick={() => {
+            downloadText(
+              "pinai-session.md",
+              sessionMarkdown(exportedMessages, notes),
+              "text/markdown;charset=utf-8",
+            );
+          }}
+        >
+          Save Markdown
+        </button>
+      </div>
 
       <button
         type="button"
@@ -155,7 +231,9 @@ function Sheet({
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <Dialog.Title className="text-lg font-medium">{title}</Dialog.Title>
-                <Dialog.Description className="mt-1 text-sm text-muted">{description}</Dialog.Description>
+                <Dialog.Description className="mt-1 text-sm text-muted">
+                  {description}
+                </Dialog.Description>
               </div>
               <Dialog.Close
                 aria-label="Close"

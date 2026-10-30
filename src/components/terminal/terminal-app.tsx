@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, SendHorizontal, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, Search, SendHorizontal, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { LIVE_ENGINES, engineById } from "@/lib/terminal/engines";
 import { helpText, hostLabel, needUrlText, routeLocal, runReply } from "@/lib/terminal/route";
 import { runTurn } from "@/lib/terminal/run";
 import { useTerminal } from "@/lib/terminal/store";
-import type { EngineId, Message } from "@/lib/terminal/types";
+import type { EngineId, Message, WebReport } from "@/lib/terminal/types";
+import { messageMatches, previousReport } from "@/lib/terminal/report-utils";
 import { ReportCard } from "./report-card";
 import { ArchitectureList, EngineSheet, SessionSheet } from "./sheets";
 
@@ -20,7 +21,6 @@ const SUGGESTIONS: { label: string; engine?: EngineId; text?: string }[] = [
 export function TerminalApp() {
   const engineId = useTerminal((state) => state.engineId);
   const messages = useTerminal((state) => state.messages);
-  const lastUrl = useTerminal((state) => state.lastUrl);
   const turns = useTerminal((state) => state.turns);
   const setEngine = useTerminal((state) => state.setEngine);
   const engine = engineById(engineId);
@@ -30,8 +30,14 @@ export function TerminalApp() {
   const [engineOpen, setEngineOpen] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(false);
   const [draft, setDraft] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const scrollerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const visibleMessages = messages
+    .map((message, index) => ({ message, index }))
+    .filter(({ message }) => messageMatches(message, searchQuery));
 
   useEffect(() => {
     void useTerminal.persist.rehydrate()?.then(() => {
@@ -65,14 +71,39 @@ export function TerminalApp() {
     if (window.matchMedia("(min-width: 768px)").matches) inputRef.current?.focus();
   }, [engineId]);
 
+  useEffect(() => {
+    if (searchOpen) searchRef.current?.focus();
+  }, [searchOpen]);
+
+  useEffect(() => {
+    const focusComposer = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        event.key !== "/" ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        target?.closest("input, textarea, select, [contenteditable='true'], [role='dialog']")
+      )
+        return;
+      event.preventDefault();
+      inputRef.current?.focus();
+    };
+    document.addEventListener("keydown", focusComposer);
+    return () => document.removeEventListener("keydown", focusComposer);
+  }, []);
+
   async function send(text: string) {
     const value = text.trim();
     if (!value || busy) return;
     const state = useTerminal.getState();
+    if (state.messages.some((message) => message.pending)) return;
     const decision = routeLocal(value, state.engineId, state.lastUrl);
     const user: Message = { id: uid(), role: "user", text: value };
     state.append(user);
     setDraft("");
+    setSearchQuery("");
+    setSearchOpen(false);
     if (inputRef.current) inputRef.current.style.height = "auto";
 
     if (decision.type === "help") {
@@ -115,8 +146,7 @@ export function TerminalApp() {
     try {
       const history = useTerminal
         .getState()
-        .messages
-        .filter((message) => !message.pending && !message.id.startsWith("welcome"))
+        .messages.filter((message) => !message.pending && !message.id.startsWith("welcome"))
         .slice(-5, -1)
         .map((message) => ({ role: message.role, text: message.text.slice(0, 400) }));
 
@@ -134,14 +164,17 @@ export function TerminalApp() {
       if (!useTerminal.getState().messages.some((message) => message.id === pendingId)) return;
 
       if (!result.ok) {
-        useTerminal.getState().patch(pendingId, { pending: false, failed: true, text: result.error });
+        useTerminal
+          .getState()
+          .patch(pendingId, { pending: false, failed: true, text: result.error });
         return;
       }
 
       useTerminal.getState().patch(pendingId, {
         pending: false,
         failed: false,
-        text: result.reply || (result.tool ? runReply(result.tool, result.report?.finalUrl ?? "") : ""),
+        text:
+          result.reply || (result.tool ? runReply(result.tool, result.report?.finalUrl ?? "") : ""),
         tool: result.tool,
         report: result.report,
       });
@@ -219,6 +252,19 @@ export function TerminalApp() {
           </div>
           <button
             type="button"
+            aria-label="Search session"
+            aria-expanded={searchOpen}
+            aria-controls="session-search"
+            className="press inline-flex size-11 shrink-0 items-center justify-center rounded-md border border-border bg-card"
+            onClick={() => {
+              setSearchOpen((open) => !open);
+              setSearchQuery("");
+            }}
+          >
+            <Search className="size-4" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
             aria-label="Session"
             className="press inline-flex size-11 items-center justify-center rounded-md border border-border bg-card"
             onClick={() => setSessionOpen(true)}
@@ -227,11 +273,81 @@ export function TerminalApp() {
           </button>
         </header>
 
+        {searchOpen ? (
+          <div
+            id="session-search"
+            className="flex items-center gap-2 border-b border-border px-3 py-2 md:px-4"
+          >
+            <label className="sr-only" htmlFor="session-search-input">
+              Search messages and reports
+            </label>
+            <input
+              id="session-search-input"
+              ref={searchRef}
+              type="search"
+              value={searchQuery}
+              placeholder="Search messages, sites or technologies"
+              className="h-11 min-w-0 flex-1 rounded-md border border-border bg-subtle px-3 text-base text-foreground outline-none focus:border-foreground"
+              onChange={(event) => setSearchQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  setSearchOpen(false);
+                  setSearchQuery("");
+                  inputRef.current?.focus();
+                }
+              }}
+            />
+            <span className="shrink-0 font-mono text-xs text-muted" role="status">
+              {visibleMessages.length}/{messages.length}
+            </span>
+            <button
+              type="button"
+              aria-label="Close session search"
+              className="press inline-flex size-11 shrink-0 items-center justify-center rounded-md border border-border"
+              onClick={() => {
+                setSearchOpen(false);
+                setSearchQuery("");
+                inputRef.current?.focus();
+              }}
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+        ) : null}
+
         <div ref={scrollerRef} className="min-h-0 flex-1 overflow-y-auto" data-testid="transcript">
-          <div className="mx-auto flex w-full max-w-2xl flex-col gap-3 px-3 py-4 md:px-5" role="log" aria-live="polite" aria-relevant="additions">
-            {messages.map((message, index) => (
-              <MessageView key={message.id} message={message} last={index === messages.length - 1} />
+          <div
+            className="mx-auto flex w-full max-w-2xl flex-col gap-3 px-3 py-4 md:px-5"
+            role="log"
+            aria-live="polite"
+            aria-relevant="additions"
+          >
+            {visibleMessages.map(({ message, index }) => (
+              <MessageView
+                key={message.id}
+                message={message}
+                last={index === messages.length - 1}
+                previous={
+                  message.report ? previousReport(messages, index, message.report) : undefined
+                }
+                busy={busy}
+                onRerun={
+                  message.report
+                    ? () => void send(`/${message.report!.mode} ${message.report!.requestedUrl}`)
+                    : undefined
+                }
+                onRetry={
+                  message.failed && messages[index - 1]?.role === "user"
+                    ? () => void send(messages[index - 1].text)
+                    : undefined
+                }
+              />
             ))}
+            {visibleMessages.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted" role="status">
+                No messages match this search. Try another word or close search.
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -309,11 +425,15 @@ export function TerminalApp() {
                     {hit.group} / {hit.name}
                   </li>
                 ))}
-                {latest.stack.length === 0 ? <li className="text-sm text-muted">No platform marker.</li> : null}
+                {latest.stack.length === 0 ? (
+                  <li className="text-sm text-muted">No platform marker.</li>
+                ) : null}
               </ul>
             </div>
           ) : (
-            <p className="mt-2 text-sm text-muted">No page yet. A read shows up here after the first card.</p>
+            <p className="mt-2 text-sm text-muted">
+              No page yet. A read shows up here after the first card.
+            </p>
           )}
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-5">
@@ -330,23 +450,55 @@ export function TerminalApp() {
   );
 }
 
-function MessageView({ message, last }: { message: Message; last?: boolean }) {
+function MessageView({
+  message,
+  last,
+  previous,
+  onRerun,
+  onRetry,
+  busy,
+}: {
+  message: Message;
+  last?: boolean;
+  previous?: WebReport;
+  onRerun?: () => void;
+  onRetry?: () => void;
+  busy?: boolean;
+}) {
   const mine = message.role === "user";
   return (
-    <div data-message={last ? "last" : "true"} className={cn("msg-in flex", mine ? "justify-end" : "justify-start")}>
+    <div
+      data-message={last ? "last" : "true"}
+      className={cn("msg-in flex", mine ? "justify-end" : "justify-start")}
+    >
       <div className={cn("min-w-0", mine ? "max-w-xs" : "w-full")}>
         <div
           className={cn(
             "rounded-lg px-3 py-3 text-sm leading-normal",
             mine
               ? "bg-primary text-primary-foreground"
-              : cn("w-fit max-w-full border bg-card text-foreground", message.failed ? "border-danger" : "border-border"),
+              : cn(
+                  "w-fit max-w-full border bg-card text-foreground",
+                  message.failed ? "border-danger" : "border-border",
+                ),
             message.pending && "text-muted",
           )}
         >
           <p className="whitespace-pre-wrap break-words">{message.text}</p>
+          {onRetry ? (
+            <button
+              type="button"
+              className="press mt-3 min-h-11 rounded-md border border-border px-3 text-sm disabled:opacity-40"
+              disabled={busy}
+              onClick={onRetry}
+            >
+              Retry request
+            </button>
+          ) : null}
         </div>
-        {message.report ? <ReportCard report={message.report} /> : null}
+        {message.report ? (
+          <ReportCard report={message.report} previous={previous} onRerun={onRerun} busy={busy} />
+        ) : null}
       </div>
     </div>
   );
