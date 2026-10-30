@@ -1,7 +1,7 @@
 import type { Message, ReportFinding, WebReport } from "./types";
 
 export type ReportChange = { label: string; before: string; after: string };
-const COMPARED_HEADERS = [
+export const COMPARED_HEADERS = [
   "content-security-policy",
   "strict-transport-security",
   "x-frame-options",

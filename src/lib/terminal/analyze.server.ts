@@ -1,7 +1,7 @@
-import { fingerprint, meta, pageExcerpt, pageTitle } from "./fingerprint";
-import { toSafeMessage } from "./guard.server";
-import { requestPublic, REQUEST_HEADERS, type FetchHit } from "./request.server";
-import { reportFindings } from "./report-utils";
+import { fingerprint, meta, pageExcerpt, pageTitle } from "./fingerprint.ts";
+import { toSafeMessage } from "./guard.server.ts";
+import { requestPublic, REQUEST_HEADERS, type FetchHit } from "./request.server.ts";
+import { reportFindings, COMPARED_HEADERS } from "./report-utils.ts";
 import type { HeaderPair, ToolName, WebReport } from "./types";
 
 /**
@@ -121,7 +121,12 @@ function redactHeaders(headers: HeaderPair[]): HeaderPair[] {
   });
   const clipped = visible.slice(0, 36).map((header) => ({
     name: header.name,
-    value: header.value.length > 300 ? header.value.slice(0, 300) + "…" : header.value,
+    // Policy tails can contain frame-ancestors and other meaningful changes.
+    // Preserve the complete values used for findings and comparisons.
+    value:
+      !COMPARED_HEADERS.includes(header.name) && header.value.length > 300
+        ? header.value.slice(0, 300) + "…"
+        : header.value,
   }));
   if (cookieCount > 0) {
     clipped.push({
