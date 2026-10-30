@@ -52,7 +52,8 @@ public final class PublicUrlGuard {
         if ((b[0] & 0xe0) != 0x20) return false;
         // Documentation, Teredo and 6to4 ranges are not direct public hosts.
         if ((b[0] & 255) == 0x20 && (b[1] & 255) == 0x02) return false;
-        return !((b[0] & 255) == 0x20 && (b[1] & 255) == 0x01 && ((b[2] == 0 && b[3] == 0) || ((b[2] & 255) == 0x0d && (b[3] & 255) == 0xb8)));
+        if ((b[0] & 255) == 0x3f && (b[1] & 255) == 0xff && (b[2] & 0xf0) == 0) return false;
+        return !((b[0] & 255) == 0x20 && (b[1] & 255) == 0x01 && ((b[2] & 255) <= 1 || ((b[2] & 255) == 0x0d && (b[3] & 255) == 0xb8)));
     }
 
     private static boolean publicV4(byte[] b) {

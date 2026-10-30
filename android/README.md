@@ -27,11 +27,11 @@ cd android
 gradle testDebugUnitTest lintDebug assembleDebug
 ```
 
-GitHub Actions builds and verifies `PinAI-Android-v1.0.0.apk` automatically on the Android branch and relevant main-branch updates. Its artifact includes the SHA-256 checksum. The bundle is generated from source during each build; generated assets, build output and signing keys are not committed.
+The GitHub Actions workflow is configured to build and verify `PinAI-Android-v1.0.0.apk` on the Android branch and relevant main-branch updates. Successful artifacts include the SHA-256 checksum. The bundle is generated from source during each build; generated assets, build output and signing keys are not committed.
 
 ## Isolation
 
-Only bundled assets load inside the WebView, from `https://appassets.androidplatform.net`. File/content access, browser network loads, mixed content, popups and external navigation are disabled. The content security policy blocks frames and connections from page scripts. Target HTML is parsed as data and rendered as escaped React text, never executed.
+Only bundled assets load inside the WebView, from `https://appassets.androidplatform.net`. File/content access, mixed content, popups and external navigation are disabled. A resource interceptor rejects every non-asset request. The content security policy blocks frames and connections from page scripts. Target HTML is parsed as data and rendered as escaped React text, never executed.
 
 Native requests reject private/local/reserved destinations, credentials and unusual ports. DNS results and redirect destinations are checked, and each page request has a 12-second budget. Public NAT64 destinations are supported for mobile networks. The application permits cleartext HTTP only so its native public reader can inspect HTTP sites; the WebView itself cannot load remote HTTP content. DNS validation is not connection pinning.
 

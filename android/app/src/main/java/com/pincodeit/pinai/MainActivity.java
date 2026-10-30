@@ -39,7 +39,7 @@ public final class MainActivity extends Activity {
     private final GrokClient grok = new GrokClient();
     private final ThreadPoolExecutor jobs = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new ArrayBlockingQueue<>(4));
     private byte[] pendingExport;
-    private boolean destroyed;
+    private volatile boolean destroyed;
 
     @Override @SuppressLint("SetJavaScriptEnabled")
     protected void onCreate(Bundle state) {
@@ -64,7 +64,8 @@ public final class MainActivity extends Activity {
         settings.setAllowFileAccess(false); settings.setAllowContentAccess(false);
         settings.setAllowFileAccessFromFileURLs(false); settings.setAllowUniversalAccessFromFileURLs(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setBlockNetworkLoads(true); settings.setJavaScriptCanOpenWindowsAutomatically(false);
+        // The resource interceptor below rejects every non-asset request.
+        settings.setJavaScriptCanOpenWindowsAutomatically(false);
         settings.setSupportMultipleWindows(false); settings.setSafeBrowsingEnabled(true);
         WebView.setWebContentsDebuggingEnabled(false);
         WebViewAssetLoader assets = new WebViewAssetLoader.Builder()
