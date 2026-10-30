@@ -27,6 +27,17 @@ cd android
 gradle testDebugUnitTest lintDebug assembleDebug
 ```
 
+An API 35 instrumentation harness is included for the remaining runtime checks:
+
+```sh
+gradle assembleDebugAndroidTest
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb shell am instrument -w -r com.pincodeit.pinai.test/com.pincodeit.pinai.RuntimeChecks
+```
+
+It exercises the installed APK's bundled UI, native bridge, large Unicode replies, private-address rejection, missing-key behavior, Android Keystore, notes, search, exports and session restoration. Export testing supplies a system result backed by a real MediaStore content URI; it does not verify file-picker navigation. See [QA.md](QA.md) for observed results and outstanding checks.
+
 The GitHub Actions workflow is configured to build and verify `PinAI-Android-v1.0.0.apk` on the Android branch and relevant main-branch updates. Successful artifacts include the SHA-256 checksum. The bundle is generated from source during each build; generated assets, build output and signing keys are not committed.
 
 ## Isolation

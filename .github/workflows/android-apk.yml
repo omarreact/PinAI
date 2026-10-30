@@ -39,7 +39,7 @@ jobs:
         run: npm run build:android:web
       - name: Build and test Android
         working-directory: android
-        run: gradle --no-daemon testDebugUnitTest lintDebug assembleDebug
+        run: gradle --no-daemon testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest
       - name: Verify installable APK signature and metadata
         shell: bash
         run: |
