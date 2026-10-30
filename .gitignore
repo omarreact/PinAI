@@ -3,3 +3,14 @@ node_modules/
 .github_repo
 .env
 .env.*
+
+android/.gradle/
+android/**/build/
+android/local.properties
+android/artifacts/
+android/app/src/main/assets/web/
+*.jks
+*.keystore
+.vercel/
+.grok/preview.log
+.grok/preview.pid

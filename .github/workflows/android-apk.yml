@@ -1,0 +1,69 @@
+name: PinAI Android APK
+on:
+  push:
+    branches: [main, codex/pinai-android-apk]
+    paths:
+      ["android/**", "src/**", "scripts/**", "package*.json", ".github/workflows/android-apk.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pinai-android-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24"
+          cache: npm
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a
+        with:
+          gradle-version: "8.9"
+      - name: Install locked web dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Check shared code and Android adapter
+        run: |
+          npm run typecheck
+          npm run typecheck:android
+          npm run lint
+          npm test
+      - name: Bundle Android UI
+        run: npm run build:android:web
+      - name: Build and test Android
+        working-directory: android
+        run: gradle --no-daemon testDebugUnitTest lintDebug assembleDebug
+      - name: Verify installable APK signature and metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          tools="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          "$tools/apksigner" verify --verbose android/app/build/outputs/apk/debug/app-debug.apk
+          "$tools/aapt" dump badging android/app/build/outputs/apk/debug/app-debug.apk
+          mkdir -p android/artifacts
+          cp android/app/build/outputs/apk/debug/app-debug.apk android/artifacts/PinAI-Android-v1.0.0.apk
+          cd android/artifacts
+          sha256sum PinAI-Android-v1.0.0.apk > SHA256SUMS.txt
+      - name: Upload installable APK
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: PinAI-Android-v1.0.0
+          path: android/artifacts/*
+          retention-days: 30
+          if-no-files-found: error
+      - name: Upload Android check reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: PinAI-Android-checks
+          path: |
+            android/app/build/reports/tests/
+            android/app/build/reports/lint-results-debug.*
+          if-no-files-found: ignore
