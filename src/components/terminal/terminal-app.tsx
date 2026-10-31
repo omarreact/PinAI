@@ -173,6 +173,14 @@ export function TerminalApp() {
           </div>
           <p className="mt-1 font-mono text-xs text-faint">Mobile</p>
         </div>
+        <div className="mx-3 mb-4">
+          <a href="/workspace" className="press flex items-center justify-between rounded-md border border-signal/50 bg-subtle px-3 py-3 text-sm font-medium text-foreground hover:border-signal">
+            AI Development Workspace <span aria-hidden="true">↗</span>
+          </a>
+          <a href="/browser-studio/index.html" className="press mt-2 flex items-center justify-between rounded-md border border-border bg-card px-3 py-3 text-sm font-medium text-foreground hover:border-signal">
+            Browser Studio <span aria-hidden="true">↗</span>
+          </a>
+        </div>
         <nav className="flex flex-1 flex-col gap-2 overflow-y-auto px-3" aria-label="Engines">
           {LIVE_ENGINES.map((item) => {
             const selected = item.id === engineId;
@@ -217,6 +225,9 @@ export function TerminalApp() {
             <div className="text-sm font-medium">{engine.name}</div>
             <div className="text-xs text-muted">{busy ? "Running" : "Idle"}</div>
           </div>
+          <a href="/browser-studio/index.html" className="press inline-flex h-11 items-center rounded-md border border-border bg-card px-3 text-xs font-medium text-signal hover:border-signal" aria-label="Open Browser Studio">
+            Browser
+          </a>
           <button
             type="button"
             aria-label="Session"
