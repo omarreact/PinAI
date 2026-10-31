@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AiBadRequest, encodeEvent, validateChatInput } from "@/lib/ai/contracts";
+import { AiBadRequest, encodeEvent, readBoundedJson, validateChatInput } from "@/lib/ai/contracts";
 export const Route = createFileRoute("/api/ai/stream")({
   server: { handlers: { POST: async ({ request }) => {
     const { requireAiUser, respondAiError, AiAccessError } = await import("@/lib/ai/access.server");
@@ -11,11 +11,7 @@ export const Route = createFileRoute("/api/ai/stream")({
       if (!request.headers.get("content-type")?.startsWith("application/json")) {
         return Response.json({ error: "JSON required." }, { status: 415 });
       }
-      const size = Number(request.headers.get("content-length") ?? "0");
-      if (size > 9_000) return Response.json({ error: "Request too large." }, { status: 413 });
-      let body: unknown;
-      try { body = await request.json(); } catch { throw new AiBadRequest("Invalid JSON."); }
-      const input = validateChatInput(body);
+      const input = validateChatInput(await readBoundedJson(request));
       const { consumeAiQuota, beginChat, getContext, saveAssistant } = await import("@/lib/ai/store.server");
       if (!(await consumeAiQuota(userId))) return Response.json({ error: "AI request limit reached. Retry shortly." }, { status: 429 });
       const conversationId = await beginChat(userId, input.conversationId, input.message);
@@ -55,7 +51,7 @@ export const Route = createFileRoute("/api/ai/stream")({
         headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-cache, no-store, no-transform", "X-Content-Type-Options": "nosniff" },
       });
     } catch (error) {
-      if (error instanceof AiBadRequest) return Response.json({ error: error.message }, { status: 400 });
+      if (error instanceof AiBadRequest) return Response.json({ error: error.message }, { status: error.status });
       return respondAiError(error);
     }
   } } },
