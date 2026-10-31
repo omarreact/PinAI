@@ -3,3 +3,6 @@ node_modules/
 .github_repo
 .env
 .env.*
+.vercel/
+.pinai/preview.pid
+.pinai/preview.log

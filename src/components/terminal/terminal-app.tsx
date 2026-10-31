@@ -36,7 +36,7 @@ export function TerminalApp() {
   useEffect(() => {
     void useTerminal.persist.rehydrate()?.then(() => {
       const id = useTerminal.getState().engineId;
-      if (!LIVE_ENGINES.some((item) => item.id === id)) useTerminal.getState().setEngine("grok");
+      if (!LIVE_ENGINES.some((item) => item.id === id)) useTerminal.getState().setEngine("openai");
       useTerminal.setState({
         messages: useTerminal.getState().messages.filter((message) => !message.pending),
       });
@@ -109,7 +109,7 @@ export function TerminalApp() {
     }
 
     const pendingId = uid();
-    const pendingText = decision.type === "plan" ? "Asking Grok" : "Reading the page";
+    const pendingText = decision.type === "plan" ? "Asking OpenAI" : "Reading the page";
     state.append({ id: pendingId, role: "assistant", text: pendingText, pending: true });
 
     try {
@@ -174,6 +174,7 @@ export function TerminalApp() {
           <p className="mt-1 font-mono text-xs text-faint">Mobile</p>
         </div>
         <div className="mx-3 mb-4">
+          <a href="/ai" className="press mb-2 flex items-center justify-between rounded-md border border-cyan-500/50 bg-cyan-500/10 px-3 py-3 text-sm font-medium text-cyan-200 hover:border-cyan-400">OpenAI Chat <span aria-hidden="true">↗</span></a>
           <a href="/workspace" className="press flex items-center justify-between rounded-md border border-signal/50 bg-subtle px-3 py-3 text-sm font-medium text-foreground hover:border-signal">
             AI Development Workspace <span aria-hidden="true">↗</span>
           </a>
@@ -364,7 +365,7 @@ function MessageView({ message, last }: { message: Message; last?: boolean }) {
 }
 
 function placeholder(engine: EngineId): string {
-  if (engine === "grok") return "Ask, or name a public site";
+  if (engine === "openai") return "Ask, or name a public site";
   if (engine === "network") return "Site to inspect headers";
   if (engine === "stack") return "Site to fingerprint";
   if (engine === "shell") return "/scan https://example.com";

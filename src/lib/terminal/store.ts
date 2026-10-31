@@ -25,7 +25,7 @@ function welcome(): Message {
 export const useTerminal = create<TerminalState>()(
   persist(
     (set, get) => ({
-      engineId: "grok",
+      engineId: "openai",
       messages: [welcome()],
       lastUrl: null,
       notes: [],

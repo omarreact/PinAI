@@ -1,4 +1,4 @@
-export type EngineId = "grok" | "scan" | "network" | "stack" | "shell";
+export type EngineId = "openai" | "scan" | "network" | "stack" | "shell";
 
 export type ToolName = "scan" | "headers" | "tech" | "apis";
 

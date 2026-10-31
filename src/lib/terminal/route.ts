@@ -136,10 +136,10 @@ export function routeLocal(text: string, engine: EngineId, lastUrl: string | nul
 
   const live = engineById(engine);
   const tool = obviousTool(trimmed) ?? live.tool;
-  const aggressive = engine !== "grok" || tool !== null;
+  const aggressive = engine !== "openai" || tool !== null;
   const url = extractUrl(trimmed, aggressive && !isConceptual(trimmed));
 
-  if (engine === "grok") {
+  if (engine === "openai") {
     if (isConceptual(trimmed) && !extractUrl(trimmed, false)) return { type: "plan" };
     if (tool && url) return { type: "run", tool, url };
     if (tool && !url && refersToLast(trimmed) && lastUrl) return { type: "run", tool, url: lastUrl };
@@ -153,7 +153,7 @@ export function routeLocal(text: string, engine: EngineId, lastUrl: string | nul
   if (isConceptual(trimmed)) {
     return {
       type: "hint",
-      text: "This engine reads sites, it does not chat. Switch to Grok for a plain answer, or send a public address.",
+      text: "This engine reads sites, it does not chat. Switch to OpenAI for a plain answer, or send a public address.",
     };
   }
   return { type: "need-url", tool: chosen };
