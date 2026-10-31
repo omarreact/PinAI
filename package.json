@@ -17,7 +17,9 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test \"scripts/**/*.test.mjs\" && node --experimental-strip-types --test src/lib/auth/sign-in-gate.test.ts src/lib/workspace/model.test.ts src/lib/ai/contracts.test.ts src/lib/ai/sse.test.ts",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "build:railway": "PINAI_RAILWAY_BUILD=1 vite build",
+    "start:railway": "node .output/server/index.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.4",
