@@ -3,12 +3,11 @@ import { auth } from "@/lib/auth/server";
 export class AiAccessError extends Error {
   constructor(public status: number, message: string) { super(message); this.name = "AiAccessError"; }
 }
-const required = ["DATABASE_URL", "BETTER_AUTH_SECRET", "BETTER_AUTH_URL", "GROK_AUTH_CLIENT_ID", "GROK_AUTH_CLIENT_SECRET", "PINAI_ALLOWED_EMAILS"];
+const required = ["DATABASE_URL", "BETTER_AUTH_SECRET", "BETTER_AUTH_URL", "PINAI_GITHUB_CLIENT_ID", "PINAI_GITHUB_CLIENT_SECRET", "PINAI_ALLOWED_EMAILS"];
 export function aiSetupStatus() {
   const missing = required.filter((key) => !process.env[key]?.trim());
   if (!process.env.OPENAI_API_KEY?.trim()) missing.push("OPENAI_API_KEY");
   if (!process.env.OPENAI_MODEL?.trim()) missing.push("OPENAI_MODEL");
-  if (process.env.VITE_AUTH_ENABLED !== "true") missing.push("VITE_AUTH_ENABLED=true");
   return { ready: missing.length === 0, missing };
 }
 export function checkOrigin(request: Request) {
@@ -21,7 +20,7 @@ export function checkOrigin(request: Request) {
 export async function requireAiUser(request: Request): Promise<string> {
   // Fail closed; never call requireUserId(), which permits a shared development identity.
   const missing = required.filter((key) => !process.env[key]?.trim());
-  if (missing.length || process.env.VITE_AUTH_ENABLED !== "true") throw new AiAccessError(503, "AI chat requires secure authentication and a persistent database.");
+  if (missing.length) throw new AiAccessError(503, "AI chat requires secure authentication and a persistent database.");
   checkOrigin(request);
   const allowed = (process.env.PINAI_ALLOWED_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   if (!allowed.length) throw new AiAccessError(503, "AI chat has no authorized accounts.");
