@@ -173,7 +173,7 @@ export function AiWorkspace() {
       id: makeId("task"),
       projectId: activeProject.id,
       title: `Investigate: ${diagnosis.category}`,
-      details: [diagnosis.meaning, ...diagnosis.nextSteps].join("\\n"),
+      details: [diagnosis.meaning, ...diagnosis.nextSteps].join("\n"),
       acceptance: "Capture the actual error, exact commit and a successful repeatable validation result.",
       priority: "high",
       status: "backlog",
