@@ -1,5 +1,3 @@
-import { auth } from "@/lib/auth/server";
-
 export class AiAccessError extends Error {
   constructor(public status: number, message: string) { super(message); this.name = "AiAccessError"; }
 }
@@ -24,6 +22,8 @@ export async function requireAiUser(request: Request): Promise<string> {
   checkOrigin(request);
   const allowed = (process.env.PINAI_ALLOWED_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   if (!allowed.length) throw new AiAccessError(503, "AI chat has no authorized accounts.");
+  // Load the auth server only for configured, authorized session requests.
+  const { auth } = await import("@/lib/auth/server");
   const session = await auth.api.getSession({ headers: request.headers });
   const user = session?.user;
   if (!user) throw new AiAccessError(401, "Sign in to use PinAI chat.");
