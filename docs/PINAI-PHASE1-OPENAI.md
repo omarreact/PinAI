@@ -3,7 +3,7 @@
 ## Shipped in the branch
 - New responsive **/ai** chat UI with streaming text, history, conversation deletion and error states.
 - Server-side **/api/ai/status**, **/api/ai/conversations**, **/api/ai/conversations/$id**, and **/api/ai/stream**.
-- New **/api/auth/$** Better Auth handler for the existing federated OAuth configuration.
+- New **/api/auth/$** Better Auth handler with optional PinAI-owned GitHub OAuth alongside the unchanged legacy broker.
 - Separate native Responses API adapter; no OpenAI key is sent to the browser.
 - Scoped conversation SQL tables, server-verified user ID, per-user request quota in SQL, no default shared dev user.
 - Existing **/** terminal, /workspace, /browser-studio, xAI provider and Android PR remain unchanged.
@@ -14,9 +14,8 @@ Set these **server-side** Vercel environment variables (production or isolated s
 - `DATABASE_URL`: persistent managed Postgres database with SSL.
 - `BETTER_AUTH_URL`: the exact canonical origin, e.g. `https://pin-ai-nine.vercel.app`.
 - `BETTER_AUTH_SECRET`: random strong secret (32+ bytes), keep private.
-- `GROK_AUTH_ISSUER`: working authorized OAuth broker; optionally use existing configured issuer.
-- `GROK_AUTH_CLIENT_ID`, `GROK_AUTH_CLIENT_SECRET`: real application-specific OAuth broker client; the bundled preview client is **not** valid on vercel.app.
-- `VITE_AUTH_ENABLED=true`: explicit build-time flag (the local Grok template has false by default).
+- `PINAI_GITHUB_CLIENT_ID`, `PINAI_GITHUB_CLIENT_SECRET`: credentials from an OAuth App owned by you at https://github.com/settings/developers (not a personal access token). Set the GitHub Authorization callback URL to `https://pin-ai-nine.vercel.app/api/auth/callback/github`. GitHub email scope is required.
+- The existing `VITE_AUTH_ENABLED=false` can remain for the original terminal; the new AI endpoints independently require an actual Better Auth session and allowlisted account, never the dev fallback.
 - `PINAI_ALLOWED_EMAILS`: comma-separated exact email accounts allowed to spend model credits (no wildcard).
 - `OPENAI_API_KEY`: private paid Platform API key, server-only.
 - `OPENAI_MODEL`: a model available in your Platform project, explicitly selected.
@@ -31,7 +30,7 @@ The existing `npm run build` runs `npm run db:migrate`. If `DATABASE_URL` points
 ### Smoke tests
 1. With no prerequisites: `/ai` renders an informative locked state and `GET /api/ai/status` returns `{ready:false}` without exposing secrets.
 2. Signed-out `GET /api/ai/conversations` and POST stream must reject without contacting OpenAI. Missing allowlist or database also fail closed.
-3. With a test account and staging DB: sign in via the existing Better Auth OAuth broker; confirm identity and exact allowlist.
+3. With a test account and staging DB: sign in via PinAI-owned GitHub OAuth; confirm identity and exact allowlist.
 4. Send a turn and confirm incremental NDJSON `start`, `delta`, `done` and reloadable assistant response.
 5. Conversation A cannot be read or deleted by account B; direct unauthenticated and cross-origin requests are denied.
 6. Quota limit rejects with HTTP 429 across independent serverless instances.
@@ -42,3 +41,6 @@ The existing `npm run build` runs `npm run db:migrate`. If `DATABASE_URL` points
 
 Documentation: https://developers.openai.com/api/docs/guides/streaming-responses
 Authentication: https://better-auth.com/docs/integrations/tanstack
+
+### Authentication caveats
+The GitHub OAuth app is **not** a GitHub App for repository automation; it is sign-in only. GitHub repository tool permissions will be added in Phase 2 via a separately scoped GitHub App. Set the callback URL exactly. No preview URL will work for the same OAuth client unless a separate callback is registered/configured.
