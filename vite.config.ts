@@ -33,7 +33,7 @@ export default defineConfig(({ command, isPreview }) => ({
     pgliteBootstrapPlugin(),
     tailwindcss(),
     tanstackStart(),
-    ...(command === "build" || isPreview ? [nitro({ preset: "vercel" })] : []),
+    ...(command === "build" || isPreview ? [nitro({ preset: process.env.PINAI_CF_PAGES_BUILD === "1" ? "cloudflare_pages" : "vercel" })] : []),
     viteReact(),
   ],
 }));
