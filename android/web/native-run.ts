@@ -13,7 +13,7 @@ export async function runTurn({ data }: { data: TurnInput }): Promise<TurnResult
     return { ok: true, reply: runReply(tool, report.finalUrl), tool, report, usedModel: false };
   };
   try {
-    if (!data.text.trim() || data.text.length > 2000)
+    if (!data.text.trim() || data.text.length > 6000)
       return { ok: false, error: "Message is empty or too long." };
     if (data.tool)
       return data.url
@@ -67,3 +67,4 @@ export async function runTurn({ data }: { data: TurnInput }): Promise<TurnResult
     };
   }
 }
+

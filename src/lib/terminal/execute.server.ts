@@ -105,7 +105,7 @@ async function askPlanner(apiKey: string, input: TurnInput): Promise<Plan> {
       body: JSON.stringify({
         model: "grok-4.5",
         temperature: 0,
-        max_tokens: 220,
+        max_tokens: 900,
         messages: [
           { role: "system", content: systemPrompt(input.lastUrl, input.engine) },
           ...input.history.map((item) => ({ role: item.role, content: item.text })),
@@ -150,3 +150,4 @@ function allow(bucket: string, limit: number): boolean {
   buckets.set(bucket, prev);
   return true;
 }
+

@@ -102,6 +102,9 @@ public final class RuntimeChecks extends Instrumentation {
             web = (WebView) ((ViewGroup) content.getChildAt(0)).getChildAt(0);
         });
         await(() -> String.valueOf(js("return document.body.innerText;")).contains("PinAI"), 45000);
+        await(() -> String.valueOf(js("return document.body.innerText;")).contains("What are we shipping next?"), 45000);
+        js("Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('Assistant & page tools')).click();return true;");
+        await(() -> Boolean.TRUE.equals(js("return !!document.querySelector('#terminal-input');")), 10000);
         await(() -> Boolean.TRUE.equals(js("return typeof window.__pinaiChunk==='function';")), 45000);
         js("window.__pinaiRuntime={};var original=window.__pinaiChunk;var chunks={};window.__pinaiChunk=function(id,chunk,last){if(id.startsWith('900')){(chunks[id]||(chunks[id]=[])).push(chunk);if(last){window.__pinaiRuntime[id]=JSON.parse(chunks[id].join(''));delete chunks[id];}}else original(id,chunk,last);};return true;");
     }
@@ -159,3 +162,4 @@ public final class RuntimeChecks extends Instrumentation {
         catch (Exception error) { failures++; try { outcomes.put(new JSONObject().put("check", name).put("passed", false).put("error", error.toString())); } catch (Exception ignored) {} }
     }
 }
+

@@ -30,7 +30,7 @@ public final class GrokClient implements AutoCloseable {
             connection.setConnectTimeout(20000); connection.setReadTimeout(20000); connection.setInstanceFollowRedirects(false);
             connection.setRequestMethod("POST"); connection.setDoOutput(true); connection.setUseCaches(false);
             connection.setRequestProperty("Authorization", "Bearer " + key); connection.setRequestProperty("Content-Type", "application/json");
-            byte[] body = new JSONObject().put("model", "grok-4.5").put("temperature", 0).put("max_tokens", 220).put("messages", messages).toString().getBytes(StandardCharsets.UTF_8);
+            byte[] body = new JSONObject().put("model", "grok-4.5").put("temperature", 0).put("max_tokens", 900).put("messages", messages).toString().getBytes(StandardCharsets.UTF_8);
             connection.setFixedLengthStreamingMode(body.length);
             try (java.io.OutputStream out = connection.getOutputStream()) { out.write(body); }
             int status = connection.getResponseCode();
@@ -49,3 +49,4 @@ public final class GrokClient implements AutoCloseable {
     }
     @Override public void close() { deadlines.shutdownNow(); }
 }
+

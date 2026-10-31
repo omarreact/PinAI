@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { TerminalApp } from "@/components/terminal/terminal-app";
+import { DevelopmentWorkspace } from "@/components/development-workspace";
 import "./mobile.css";
 import "./native-bridge";
 
@@ -19,7 +19,7 @@ export function AndroidApp() {
         </button>
       </div>
       <div className="android-terminal">
-        <TerminalApp />
+        <DevelopmentWorkspace />
       </div>
     </div>
   );
