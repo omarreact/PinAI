@@ -33,6 +33,7 @@ const label = "mb-1.5 block text-xs font-medium text-muted";
 export function AiWorkspace() {
   const [data, setData] = useState<WorkspaceData>(starterWorkspace);
   const [hydrated, setHydrated] = useState(false);
+  const [storageRecovery, setStorageRecovery] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState("pinai");
   const [activeTaskId, setActiveTaskId] = useState("pinai-runner");
   const [panel, setPanel] = useState<Panel>("overview");
@@ -53,19 +54,20 @@ export function AiWorkspace() {
         if (parsed.tasks.length) setActiveTaskId(parsed.tasks[0].id);
       }
     } catch {
-      setMessage("Local workspace backup could not be read. Starter data is shown; export any recoverable data before replacing browser storage.");
+      setStorageRecovery(true);
+      setMessage("Local workspace data is invalid. Its original bytes are preserved; changes will not be saved until you explicitly reset it.");
     }
     setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || storageRecovery) return;
     try {
       window.localStorage.setItem(WORKSPACE_KEY, JSON.stringify(data));
     } catch {
       setMessage("This browser could not save workspace data. Export a backup to avoid losing changes.");
     }
-  }, [data, hydrated]);
+  }, [data, hydrated, storageRecovery]);
 
   const activeProject = data.projects.find((p) => p.id === activeProjectId) ?? data.projects[0];
   const tasksForProject = useMemo(
@@ -144,6 +146,47 @@ export function AiWorkspace() {
     setPanel("tasks");
   }
 
+  function downloadRecovery() {
+    const source = window.localStorage.getItem(WORKSPACE_KEY);
+    if (!source) return;
+    const objectUrl = URL.createObjectURL(new Blob([source], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = "pinai-unreadable-recovery.json";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  }
+
+  function resetRecovery() {
+    if (!window.confirm("You are about to replace the invalid local data with the starter workspace. Have you downloaded the raw recovery backup?")) return;
+    window.localStorage.removeItem(WORKSPACE_KEY);
+    setStorageRecovery(false);
+    setData(structuredClone(starterWorkspace));
+    setMessage("Local storage reset. Starter projects and tasks are now editable.");
+  }
+
+  function taskFromDiagnosis() {
+    if (!activeProject || !log.trim()) return;
+    const task: WorkspaceTask = {
+      id: makeId("task"),
+      projectId: activeProject.id,
+      title: `Investigate: ${diagnosis.category}`,
+      details: [diagnosis.meaning, ...diagnosis.nextSteps].join("\\n"),
+      acceptance: "Capture the actual error, exact commit and a successful repeatable validation result.",
+      priority: "high",
+      status: "backlog",
+      blocker: "Diagnosis is unconfirmed; investigate before changing source.",
+      evidence: [],
+      updatedAt: new Date().toISOString().slice(0, 10),
+    };
+    setData((state) => ({ ...state, tasks: [...state.tasks, task] }));
+    setActiveTaskId(task.id);
+    setPanel("tasks");
+    setMessage("Diagnostic checklist added as a local task; the raw log was not saved.");
+  }
+
   async function copyBrief() {
     try {
       await navigator.clipboard.writeText(brief);
@@ -208,7 +251,7 @@ export function AiWorkspace() {
           <Metric icon={<FileCheck2 className="size-4" />} name="Manually verified" value={verified} />
         </div>
 
-        {message && <div role="status" className="mt-4 flex items-start gap-2 rounded-lg border border-border bg-subtle px-4 py-3 text-sm text-muted"><AlertTriangle className="mt-0.5 size-4 shrink-0" /><span>{message}</span><button className="ml-auto text-faint hover:text-foreground" type="button" onClick={() => setMessage("")} aria-label="Dismiss message">×</button></div>}
+        {message && <div role="status" className="mt-4 flex flex-wrap items-start gap-2 rounded-lg border border-border bg-subtle px-4 py-3 text-sm text-muted"><AlertTriangle className="mt-0.5 size-4 shrink-0" /><span className="min-w-0 flex-1">{message}</span>{storageRecovery && <><button type="button" onClick={downloadRecovery} className={button}>Download raw backup</button><button type="button" onClick={resetRecovery} className={button}>Reset local storage</button></>}<button className="text-faint hover:text-foreground" type="button" onClick={() => setMessage("")} aria-label="Dismiss message">×</button></div>}
 
         <div className="mt-6 grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
           <aside className={`${surface} h-fit p-3`}>
@@ -309,7 +352,7 @@ export function AiWorkspace() {
               <div className={`${surface} space-y-4 p-4 sm:p-5`}>
                 <div><h2 className="font-medium">CI / build / device error triage</h2><p className="mt-1 text-sm text-muted">Paste a sanitized failure excerpt. Classification is deterministic and may be incomplete.</p></div>
                 <Field title="Log excerpt (remove tokens, passwords, headers and private data)"><textarea className={`${input} font-mono text-xs`} rows={10} maxLength={40000} value={log} onChange={(e) => setLog(e.target.value)} placeholder="Example: runner_id: 0; steps: []" /></Field>
-                {log.trim() && <div className="rounded-xl border border-border bg-subtle p-4"><div className="flex items-center gap-2"><SearchCheck className="size-4 text-signal" /><h3 className="font-medium">{diagnosis.category}</h3></div><p className="mt-2 text-sm text-muted">{diagnosis.meaning}</p><ol className="mt-3 list-inside list-decimal space-y-2 text-sm text-muted">{diagnosis.nextSteps.map((step) => <li key={step}>{step}</li>)}</ol><p className="mt-3 text-xs text-faint">Classification: {diagnosis.confidence}. No external AI or GitHub requests were made.</p></div>}
+                {log.trim() && <div className="rounded-xl border border-border bg-subtle p-4"><div className="flex items-center gap-2"><SearchCheck className="size-4 text-signal" /><h3 className="font-medium">{diagnosis.category}</h3></div><p className="mt-2 text-sm text-muted">{diagnosis.meaning}</p><ol className="mt-3 list-inside list-decimal space-y-2 text-sm text-muted">{diagnosis.nextSteps.map((step) => <li key={step}>{step}</li>)}</ol><p className="mt-3 text-xs text-faint">Classification: {diagnosis.confidence}. No external AI or GitHub requests were made.</p><button type="button" className={`${button} mt-3`} onClick={taskFromDiagnosis}><Plus className="mr-1 inline size-4" /> Add to task queue</button></div>}
               </div>
             </section>}
 
