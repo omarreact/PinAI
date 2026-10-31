@@ -238,7 +238,8 @@ export function AiWorkspace() {
               <p className="text-xs text-muted">Local-first AI workflow control center</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <a href="/browser-studio/index.html" className={button}>Open Browser Studio ↗</a>
             <span className="rounded-full border border-border px-3 py-1.5 text-xs text-muted"><ShieldCheck className="mr-1 inline size-3.5 text-signal" /> No production writes</span>
             <button onClick={exportWorkspace} className={button} type="button"><Download className="mr-1 inline size-4" /> Export</button>
           </div>
