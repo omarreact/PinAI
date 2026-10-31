@@ -9,7 +9,7 @@ export type AiStreamEvent =
   | { type: "done"; conversationId: string }
   | { type: "error"; message: string };
 
-export class AiBadRequest extends Error {}
+export class AiBadRequest extends Error { constructor(message: string, public status = 400) { super(message); } }
 export function validateChatInput(body: unknown): AiStreamRequest {
   if (!body || typeof body !== "object" || Array.isArray(body)) throw new AiBadRequest("Invalid request.");
   const rec = body as Record<string, unknown>;
@@ -25,4 +25,26 @@ export function validateChatInput(body: unknown): AiStreamRequest {
 export function encodeEvent(event: AiStreamEvent): string { return JSON.stringify(event) + "\n"; }
 export function safeTitle(message: string): string {
   return message.replace(/\s+/g, " ").trim().slice(0, 70) || "New chat";
+}
+
+/** Bounded body reader: never allocate or parse arbitrary-size anonymous POSTs. */
+export async function readBoundedJson(request: Request, maxBytes = 9000): Promise<unknown> {
+  const reader = request.body?.getReader();
+  if (!reader) throw new AiBadRequest("JSON body required.");
+  const decoder = new TextDecoder();
+  let received = 0;
+  let text = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    received += value.byteLength;
+    if (received > maxBytes) {
+      await reader.cancel();
+      throw new AiBadRequest("Request too large.", 413);
+    }
+    text += decoder.decode(value, { stream: true });
+  }
+  text += decoder.decode();
+  try { return JSON.parse(text) as unknown; }
+  catch { throw new AiBadRequest("Invalid JSON."); }
 }
