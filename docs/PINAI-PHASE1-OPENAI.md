@@ -6,7 +6,7 @@
 - New **/api/auth/$** Better Auth handler with optional PinAI-owned GitHub OAuth alongside the unchanged legacy broker.
 - Separate native Responses API adapter; no OpenAI key is sent to the browser.
 - Scoped conversation SQL tables, server-verified user ID, per-user request quota in SQL, no default shared dev user.
-- Existing **/** terminal, /workspace, /browser-studio, xAI provider and Android PR remain unchanged.
+- Existing /workspace and /browser-studio remain unchanged; the original terminal moves to /terminal and uses OpenAI.
 
 ## Provisioning required before the chat can run
 
@@ -15,7 +15,7 @@ Set these **server-side** Vercel environment variables (production or isolated s
 - `BETTER_AUTH_URL`: the exact canonical origin, e.g. `https://pin-ai-nine.vercel.app`.
 - `BETTER_AUTH_SECRET`: random strong secret (32+ bytes), keep private.
 - `PINAI_GITHUB_CLIENT_ID`, `PINAI_GITHUB_CLIENT_SECRET`: credentials from an OAuth App owned by you at https://github.com/settings/developers (not a personal access token). Set the GitHub Authorization callback URL to `https://pin-ai-nine.vercel.app/api/auth/callback/github`. GitHub email scope is required.
-- The existing `VITE_AUTH_ENABLED=false` can remain for the original terminal; the new AI endpoints independently require an actual Better Auth session and allowlisted account, never the dev fallback.
+- Authentication no longer uses `VITE_AUTH_ENABLED` or the shared development fallback. The terminal and chat both require a verified GitHub session.
 - `PINAI_ALLOWED_EMAILS`: comma-separated exact email accounts allowed to spend model credits (no wildcard).
 - `OPENAI_API_KEY`: private paid Platform API key, server-only.
 - `OPENAI_MODEL`: a model available in your Platform project, explicitly selected.
