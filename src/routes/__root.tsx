@@ -1,9 +1,8 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
-import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import appCss from "../styles.css?url";
 
-const APP_NAME = "AI Terminal Mobile";
+const APP_NAME = "PinAI — OpenAI Developer Workspace";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -18,14 +17,12 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "A phone chat that reads public pages for you: platform, headers, CDNs, and endpoints. No raw shell.",
+          "Private OpenAI development assistant with a safe web diagnostics terminal.",
       },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "stylesheet", href: appCss },
-      { rel: "manifest", href: "/__grok/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
         rel: "preconnect",
@@ -44,7 +41,6 @@ export const Route = createRootRoute({
         <HeadContent />
       </head>
       <body>
-        <PreviewHostBridge />
         <AuthProvider>
           <Outlet />
         </AuthProvider>

@@ -1,8 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { TerminalApp } from "@/components/terminal/terminal-app";
+import { PinAiChat } from "@/components/ai/pinai-chat";
 
-export const Route = createFileRoute("/")({ component: Home });
-
-function Home() {
-  return <TerminalApp />;
-}
+/** The primary PinAI experience; /ai remains a backward-compatible alias. */
+export const Route = createFileRoute("/")({ component: PinAiChat });

@@ -148,12 +148,13 @@ export function PinAiChat() {
     <div className="flex min-h-[100dvh] flex-col bg-[#080d16] font-sans text-zinc-100">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#0c1422] px-4 py-3 md:px-6">
         <div className="flex items-center gap-3">
-          <a href="/" className={linkStyle} aria-label="Back to PinAI terminal"><ArrowLeft className="size-4" /></a>
+          <a href="/terminal" className={linkStyle} aria-label="Open PinAI terminal"><ArrowLeft className="size-4" /></a>
           <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-700 shadow-lg shadow-cyan-950/40"><Bot className="size-5" /></span>
           <div><h1 className="font-semibold tracking-tight">PinAI <span className="text-cyan-400">Chat</span></h1><p className="text-xs text-zinc-400">Private developer assistant</p></div>
         </div>
         <div className="flex items-center gap-2">
           <span className="hidden items-center gap-1.5 text-xs text-zinc-400 sm:flex"><ShieldCheck className="size-4 text-cyan-400" /> Scoped access</span>
+          <a href="/terminal" className={linkStyle}>Terminal</a>
           <a href="/workspace" className={linkStyle}>Workspace</a>
           <a href="/browser-studio/index.html" className={linkStyle}>Studio</a>
           <button type="button" onClick={() => setMobileHistory((v) => !v)} className={`md:hidden ${buttonStyle}`}>History</button>

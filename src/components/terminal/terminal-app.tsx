@@ -36,7 +36,7 @@ export function TerminalApp() {
   useEffect(() => {
     void useTerminal.persist.rehydrate()?.then(() => {
       const id = useTerminal.getState().engineId;
-      if (!LIVE_ENGINES.some((item) => item.id === id)) useTerminal.getState().setEngine("grok");
+      if (!LIVE_ENGINES.some((item) => item.id === id)) useTerminal.getState().setEngine("openai");
       useTerminal.setState({
         messages: useTerminal.getState().messages.filter((message) => !message.pending),
       });
@@ -109,7 +109,7 @@ export function TerminalApp() {
     }
 
     const pendingId = uid();
-    const pendingText = decision.type === "plan" ? "Asking Grok" : "Reading the page";
+    const pendingText = decision.type === "plan" ? "Asking OpenAI" : "Reading the page";
     state.append({ id: pendingId, role: "assistant", text: pendingText, pending: true });
 
     try {
@@ -365,7 +365,7 @@ function MessageView({ message, last }: { message: Message; last?: boolean }) {
 }
 
 function placeholder(engine: EngineId): string {
-  if (engine === "grok") return "Ask, or name a public site";
+  if (engine === "openai") return "Ask, or name a public site";
   if (engine === "network") return "Site to inspect headers";
   if (engine === "stack") return "Site to fingerprint";
   if (engine === "shell") return "/scan https://example.com";

@@ -7,6 +7,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as WorkspaceRouteImport } from './routes/workspace'
 import { Route as AiRouteImport } from './routes/ai'
 import { Route as ApiAiStatusRouteImport } from './routes/api/ai/status'
@@ -18,6 +19,12 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+
+const TerminalRoute = TerminalRouteImport.update({
+  id: '/terminal',
+  path: '/terminal',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -65,6 +72,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/terminal': typeof TerminalRoute
   '/workspace': typeof WorkspaceRoute
   '/ai': typeof AiRoute
   '/api/ai/status': typeof ApiAiStatusRoute
@@ -75,6 +83,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/terminal': typeof TerminalRoute
   '/workspace': typeof WorkspaceRoute
   '/ai': typeof AiRoute
   '/api/ai/status': typeof ApiAiStatusRoute
@@ -86,6 +95,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/terminal': typeof TerminalRoute
   '/workspace': typeof WorkspaceRoute
   '/ai': typeof AiRoute
   '/api/ai/status': typeof ApiAiStatusRoute
@@ -96,14 +106,15 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/workspace' | '/ai' | '/api/ai/status' | '/api/ai/stream' | '/api/ai/conversations' | '/api/ai/conversations/$id' | '/api/auth/$'
+  fullPaths: '/' | '/terminal' | '/workspace' | '/ai' | '/api/ai/status' | '/api/ai/stream' | '/api/ai/conversations' | '/api/ai/conversations/$id' | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/workspace' | '/ai' | '/api/ai/status' | '/api/ai/stream' | '/api/ai/conversations' | '/api/ai/conversations/$id' | '/api/auth/$'
-  id: '__root__' | '/' | '/workspace' | '/ai' | '/api/ai/status' | '/api/ai/stream' | '/api/ai/conversations' | '/api/ai/conversations/$id' | '/api/auth/$'
+  to: '/' | '/terminal' | '/workspace' | '/ai' | '/api/ai/status' | '/api/ai/stream' | '/api/ai/conversations' | '/api/ai/conversations/$id' | '/api/auth/$'
+  id: '__root__' | '/' | '/terminal' | '/workspace' | '/ai' | '/api/ai/status' | '/api/ai/stream' | '/api/ai/conversations' | '/api/ai/conversations/$id' | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  TerminalRoute: typeof TerminalRoute
   WorkspaceRoute: typeof WorkspaceRoute
   AiRoute: typeof AiRoute
   ApiAiStatusRoute: typeof ApiAiStatusRoute
@@ -119,6 +130,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terminal': {
+      id: '/terminal'
+      path: '/terminal'
+      fullPath: '/terminal'
+      preLoaderRoute: typeof TerminalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/workspace': {
@@ -174,6 +192,7 @@ declare module '@tanstack/react-router' {
 }
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  TerminalRoute: TerminalRoute,
   WorkspaceRoute: WorkspaceRoute,
   AiRoute: AiRoute,
   ApiAiStatusRoute: ApiAiStatusRoute,
