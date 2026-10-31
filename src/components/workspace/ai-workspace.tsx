@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   AlertTriangle, ArrowLeft, ArrowUpRight, CheckCircle2, Clipboard, Code2,
   Download, FileCheck2, FolderKanban, GitPullRequest, Plus, SearchCheck,
@@ -112,6 +112,23 @@ export function AiWorkspace() {
     changeProjectAfterAdd(project.id);
   }
   function changeProjectAfterAdd(id: string) { setActiveProjectId(id); setActiveTaskId(""); setMessage(""); }
+
+  function removeProject() {
+    if (!activeProject || !window.confirm(`Remove "${activeProject.name}" and its local tasks? Export a backup first if you need them.`)) return;
+    const remaining = data.projects.filter((p) => p.id !== activeProject.id);
+    const tasks = data.tasks.filter((t) => t.projectId !== activeProject.id);
+    setData((state) => ({ ...state, projects: remaining, tasks }));
+    setActiveProjectId(remaining[0]?.id ?? "");
+    setActiveTaskId(tasks.find((t) => t.projectId === remaining[0]?.id)?.id ?? "");
+    setMessage("Project and its local tasks removed. Production repositories were not changed.");
+  }
+  function removeTask() {
+    if (!activeTask || !window.confirm("Remove this local task? Export a backup first if you need it.")) return;
+    const tasks = data.tasks.filter((t) => t.id !== activeTask.id);
+    setData((state) => ({ ...state, tasks }));
+    setActiveTaskId(tasks.find((t) => t.projectId === activeProject?.id)?.id ?? "");
+    setMessage("Local task removed. No GitHub issue or repository was changed.");
+  }
 
   function addTask() {
     const title = newTaskTitle.trim();
@@ -231,6 +248,7 @@ export function AiWorkspace() {
                       <div className="sm:col-span-2"><Field title="Project objective"><textarea rows={2} className={input} value={activeProject.goal} onChange={(e) => updateProject({ goal: e.target.value })} maxLength={1200} /></Field></div>
                       <div className="sm:col-span-2"><Field title="Non-negotiable instructions"><textarea rows={4} className={input} value={activeProject.guardrails} onChange={(e) => updateProject({ guardrails: e.target.value })} maxLength={3000} /></Field></div>
                     </div>
+                    <div className="mt-4 flex justify-end"><button type="button" onClick={removeProject} className="rounded-lg px-3 py-2 text-xs text-danger hover:bg-subtle">Delete local project…</button></div>
                   </div>
                 ) : <p className="py-8 text-muted">Add a project to begin.</p>}
                 <div className={`${surface} p-4 sm:p-5`}>
@@ -259,7 +277,7 @@ export function AiWorkspace() {
                     {!tasksForProject.length && <p className="p-4 text-sm text-muted">Create the first task above.</p>}
                   </div>
                   {activeTask ? <div className={`${surface} min-w-0 space-y-4 p-4 sm:p-5`}>
-                    <h2 className="font-medium">Task details</h2>
+                    <div className="flex items-center justify-between gap-3"><h2 className="font-medium">Task details</h2><button type="button" onClick={removeTask} className="text-xs text-danger hover:underline">Delete local task…</button></div>
                     <Field title="Title"><input className={input} value={activeTask.title} onChange={(e) => updateTask({ title: e.target.value })} maxLength={300} /></Field>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <Field title="Priority"><select className={input} value={activeTask.priority} onChange={(e) => updateTask({ priority: e.target.value as Priority })}><option value="critical">Critical</option><option value="high">High</option><option value="normal">Normal</option></select></Field>
@@ -313,9 +331,9 @@ export function AiWorkspace() {
   );
 }
 
-function Metric({ name, value, icon }: { name: string; value: number; icon: React.ReactNode }) {
+function Metric({ name, value, icon }: { name: string; value: number; icon: ReactNode }) {
   return <div className={`${surface} p-3 sm:p-4`}><div className="flex items-center gap-2 text-xs text-muted">{icon}{name}</div><div className="mt-2 text-2xl font-semibold tabular-nums">{value}</div></div>;
 }
-function Field({ title, children }: { title: string; children: React.ReactNode }) {
+function Field({ title, children }: { title: string; children: ReactNode }) {
   return <label className="block"><span className={label}>{title}</span>{children}</label>;
 }
