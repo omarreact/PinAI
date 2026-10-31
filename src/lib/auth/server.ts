@@ -172,8 +172,21 @@ const grokOAuthPlugin = authConfigured
     })
   : null;
 
+// Independent GitHub OAuth for PinAI Chat, without changing the legacy Grok broker.
+// Only enabled when PinAI-owned OAuth application credentials are supplied.
+const pinaiGitHub =
+  env("PINAI_GITHUB_CLIENT_ID") && env("PINAI_GITHUB_CLIENT_SECRET")
+    ? {
+        github: {
+          clientId: env("PINAI_GITHUB_CLIENT_ID") as string,
+          clientSecret: env("PINAI_GITHUB_CLIENT_SECRET") as string,
+        },
+      }
+    : null;
+
 export const auth = betterAuth({
   baseURL,
+  ...(pinaiGitHub ? { socialProviders: pinaiGitHub } : {}),
   // Deployed apps inject BETTER_AUTH_SECRET. Preview: process-stable secret on
   // globalThis so HMR doesn't invalidate PGLite-backed sessions (see above).
   secret: env("BETTER_AUTH_SECRET") ?? previewAuthSecret(),
