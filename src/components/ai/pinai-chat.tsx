@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, Bot, Plus, Send, ShieldCheck, Trash2, LoaderCircle, MessageSquareText, LockKeyhole } from "lucide-react";
-import { GROK_PROVIDERS, signIn } from "@/lib/auth/client";
+import { authClient } from "@/lib/auth/client";
 import type { AiChatMessage, AiConversation, AiStreamEvent } from "@/lib/ai/contracts";
 
 const linkStyle = "rounded-xl border border-zinc-800 px-3 py-2 text-sm text-zinc-300 transition hover:border-cyan-600 hover:text-white";
@@ -190,7 +190,7 @@ export function PinAiChat() {
               <LockKeyhole className="size-12 text-cyan-400" />
               <h2 className="text-xl font-semibold">Sign in to PinAI</h2>
               <p className="text-sm text-zinc-400">A verified account on the server allowlist is required before chat history or model access is available.</p>
-              {GROK_PROVIDERS.map((provider) => <button type="button" key={provider.providerId} onClick={() => void signIn(provider.providerId, { callbackURL: "/ai", errorCallbackURL: "/ai" }).catch((e: unknown) => setError(e instanceof Error ? e.message : "Sign-in failed."))} className={`w-full ${buttonStyle}`}>Continue with {provider.label}</button>)}
+              <button type="button" onClick={() => void authClient.signIn.social({ provider: "github", callbackURL: "/ai", errorCallbackURL: "/ai" }).then((r) => { if (r.error) throw new Error(r.error.message ?? "GitHub sign-in failed."); if (r.data?.url) window.location.href = r.data.url; }).catch((e: unknown) => setError(e instanceof Error ? e.message : "Sign-in failed."))} className={`w-full ${buttonStyle}`}>Continue with GitHub</button>
             </div>
           )}
           {ready === true && authenticated === true && (
