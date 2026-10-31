@@ -174,6 +174,7 @@ export function TerminalApp() {
           <p className="mt-1 font-mono text-xs text-faint">Mobile</p>
         </div>
         <div className="mx-3 mb-4">
+          <a href="/ai" className="press mb-2 flex items-center justify-between rounded-md border border-cyan-500/50 bg-cyan-500/10 px-3 py-3 text-sm font-medium text-cyan-200 hover:border-cyan-400">OpenAI Chat <span aria-hidden="true">↗</span></a>
           <a href="/workspace" className="press flex items-center justify-between rounded-md border border-signal/50 bg-subtle px-3 py-3 text-sm font-medium text-foreground hover:border-signal">
             AI Development Workspace <span aria-hidden="true">↗</span>
           </a>
