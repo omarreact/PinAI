@@ -1,3 +1,4 @@
+import { SseParser } from "./sse";
 /** Server-only, provider-isolated OpenAI Responses API streaming; no browser API keys. */
 export type OpenAiTurn = { role: "user" | "assistant"; content: string };
 export async function* streamOpenAiText(history: OpenAiTurn[], signal: AbortSignal): AsyncGenerator<string> {
@@ -25,21 +26,13 @@ export async function* streamOpenAiText(history: OpenAiTurn[], signal: AbortSign
   }
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
-  let buffer = "";
+  const parser = new SseParser();
   let completed = false;
   try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
-      let end;
-      while ((end = buffer.indexOf("\n\n")) !== -1) {
-        const block = buffer.slice(0, end);
-        buffer = buffer.slice(end + 2);
-        const data = block.split("\n").filter((line) => line.startsWith("data:")).map((line) => line.slice(5).trimStart()).join("\n");
-        if (!data || data === "[DONE]") continue;
-        let event: { type?: string; delta?: string };
-        try { event = JSON.parse(data) as { type?: string; delta?: string }; } catch { continue; }
+      for (const event of parser.push(decoder.decode(value, { stream: true }))) {
         if (event.type === "response.output_text.delta" && typeof event.delta === "string") yield event.delta;
         if (event.type === "response.completed") completed = true;
         if (event.type === "response.failed" || event.type === "error") throw new Error("The AI provider failed to complete the response.");
