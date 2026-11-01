@@ -235,6 +235,23 @@ h3 { margin:0; font-size:14px; font-weight:680; }
 .quick-task-form .button { flex:none; }
 @media(max-width:450px) { .quick-task-form { flex-wrap:wrap; } .quick-task-form .button { width:100%; } }
 
+
+/* Separate Studio sections from the four permanent PinAI mobile destinations. */
+.pinai-cross-nav { display:none; }
+@media(max-width:760px) {
+  .mobile-tabs { position:sticky; top:0; bottom:auto; z-index:20; min-height:54px; height:auto; padding:5px 9px; justify-content:flex-start; gap:5px; overflow-x:auto; border-top:0; border-bottom:1px solid var(--line); }
+  .mobile-tab { flex:0 0 auto; min-width:79px; min-height:44px; gap:3px; padding:6px 8px; border-radius:8px; font-size:10px; }
+  .mobile-tab.active { background:rgba(113,233,188,.12); }
+  .app-shell { padding-bottom:calc(72px + env(safe-area-inset-bottom)); }
+  .app-footer { padding-bottom:28px; }
+  .toast { bottom:calc(84px + env(safe-area-inset-bottom)); }
+  .pinai-cross-nav { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; position:fixed; left:0; right:0; bottom:0; z-index:60; height:calc(72px + env(safe-area-inset-bottom)); padding:8px 8px calc(8px + env(safe-area-inset-bottom)); background:rgba(12,20,34,.98); border-top:1px solid rgba(255,255,255,.13); box-shadow:0 -5px 22px rgba(0,0,0,.3); }
+  .pinai-cross-link { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; gap:3px; min-height:48px; border-radius:12px; color:#aeb9c7; font-size:11px; line-height:16px; font-weight:600; text-decoration:none; }
+  .pinai-cross-link svg { width:20px; height:20px; }
+  .pinai-cross-link.active { color:#67e8f9; background:rgba(8,145,178,.18); }
+  .pinai-cross-link:focus-visible {outline:2px solid #67e8f9;outline-offset:-2px;}
+}
+
 </style>
   <title>PinAI — Browser Studio (Standalone)</title>
   <script>
@@ -779,12 +796,18 @@ h3 { margin:0; font-size:14px; font-weight:680; }
         </div>
         <div class="topbar-right"><span class="topbar-indicator"><span class="pip"></span> Browser edition</span><button id="top-export" class="button button-secondary btn-small" type="button"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 17v4h14v-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> Export</button></div>
       </header>
+      <nav id="mobile-tabs" class="mobile-tabs" aria-label="Studio sections"></nav>
       <div id="storage-warning" class="inline-warning" role="alert" hidden></div>
       <div id="app-content" class="content-area" aria-live="polite"></div>
       <footer class="app-footer"><span>PINCODE IT <span class="bullet">•</span> PinAI Browser Studio</span><span>Local first <span class="bullet">•</span> No automatic production changes</span></footer>
     </div>
   </div>
-  <nav id="mobile-tabs" class="mobile-tabs" aria-label="Quick navigation"></nav>
+  <nav class="pinai-cross-nav" aria-label="PinAI main navigation">
+    <a href="/" class="pinai-cross-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.4A9 9 0 1 1 21 11.5Z"/></svg><span>Chat</span></a>
+    <a href="/terminal" class="pinai-cross-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M12 16h5"/></svg><span>Terminal</span></a>
+    <a href="/workspace" class="pinai-cross-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v16M3 9h18"/></svg><span>Projects</span></a>
+    <a href="/browser-studio/index.html" class="pinai-cross-link active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 9v12"/></svg><span>Studio</span></a>
+  </nav>
   <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <input type="file" id="file-import" accept=".json,application/json" hidden aria-label="Select workspace JSON backup" />
 </body>

@@ -1,5 +1,6 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
+import { AppNavigation } from "@/components/navigation/app-navigation";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "PinAI — OpenAI Developer Workspace";
@@ -43,6 +44,7 @@ export const Route = createRootRoute({
       <body>
         <AuthProvider>
           <Outlet />
+          <AppNavigation />
         </AuthProvider>
         <Scripts />
       </body>

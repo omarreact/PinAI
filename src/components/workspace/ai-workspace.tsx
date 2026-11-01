@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
-  AlertTriangle, ArrowLeft, ArrowUpRight, CheckCircle2, Clipboard, Code2,
+  AlertTriangle, ArrowUpRight, CheckCircle2, Clipboard, Code2,
   Download, FileCheck2, FolderKanban, GitPullRequest, Plus, SearchCheck,
   ShieldCheck, Upload, WandSparkles,
 } from "lucide-react";
@@ -227,19 +227,18 @@ export function AiWorkspace() {
   }
 
   return (
-    <div className="min-h-dvh bg-background text-foreground">
+    <div className="pinai-main-screen min-h-dvh bg-background text-foreground">
       <div className="mx-auto w-full max-w-7xl px-4 pb-12 pt-5 sm:px-6 lg:px-8">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-5">
           <div className="flex items-center gap-3">
-            <a href="/" aria-label="Back to PinAI terminal" className="press rounded-lg border border-border bg-card p-2.5 hover:border-faint"><ArrowLeft className="size-4" /></a>
             <div className="flex size-10 items-center justify-center rounded-xl bg-subtle"><Code2 className="size-5 text-signal" /></div>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">PinAI <span className="font-normal text-muted">/ Development</span></h1>
+              <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">PinAI <span className="font-normal text-muted">Projects</span></h1>
               <p className="text-xs text-muted">Local-first AI workflow control center</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <a href="/browser-studio/index.html" className={button}>Open Browser Studio ↗</a>
+            <a href="/browser-studio/index.html" className={`hidden md:inline-flex ${button}`}>Open Browser Studio ↗</a>
             <span className="rounded-full border border-border px-3 py-1.5 text-xs text-muted"><ShieldCheck className="mr-1 inline size-3.5 text-signal" /> No production writes</span>
             <button onClick={exportWorkspace} className={button} type="button"><Download className="mr-1 inline size-4" /> Export</button>
           </div>
