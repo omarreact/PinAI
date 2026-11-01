@@ -33,7 +33,7 @@ export default defineConfig(({ command, isPreview }) => ({
     pgliteBootstrapPlugin(),
     tailwindcss(),
     tanstackStart(),
-    ...(command === "build" || isPreview ? [nitro({ preset: "vercel" })] : []),
+    ...(command === "build" || isPreview ? [nitro({ preset: process.env.PINAI_RAILWAY_BUILD === "1" ? "node_server" : "vercel" })] : []),
     viteReact(),
   ],
 }));

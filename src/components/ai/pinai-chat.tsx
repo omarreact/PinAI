@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowLeft, Bot, Plus, Send, ShieldCheck, Trash2, LoaderCircle, MessageSquareText, LockKeyhole } from "lucide-react";
+import { Bot, History, X, Plus, Send, ShieldCheck, Trash2, LoaderCircle, MessageSquareText, LockKeyhole } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 import type { AiChatMessage, AiConversation, AiStreamEvent } from "@/lib/ai/contracts";
 
@@ -145,23 +145,27 @@ export function PinAiChat() {
   }
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-[#080d16] font-sans text-zinc-100">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#0c1422] px-4 py-3 md:px-6">
-        <div className="flex items-center gap-3">
-          <a href="/terminal" className={linkStyle} aria-label="Open PinAI terminal"><ArrowLeft className="size-4" /></a>
-          <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-700 shadow-lg shadow-cyan-950/40"><Bot className="size-5" /></span>
-          <div><h1 className="font-semibold tracking-tight">PinAI <span className="text-cyan-400">Chat</span></h1><p className="text-xs text-zinc-400">Private developer assistant</p></div>
+    <div className="pinai-main-screen flex min-h-[100dvh] flex-col bg-[#080d16] font-sans text-zinc-100">
+      <header className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-[#0c1422] px-4 py-3 md:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-700 shadow-lg shadow-cyan-950/40"><Bot className="size-5" /></span>
+          <div className="min-w-0"><h1 className="truncate font-semibold tracking-tight">PinAI <span className="text-cyan-400">Chat</span></h1><p className="truncate text-xs text-zinc-400">Your AI assistant</p></div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="hidden items-center gap-1.5 text-xs text-zinc-400 sm:flex"><ShieldCheck className="size-4 text-cyan-400" /> Scoped access</span>
-          <a href="/terminal" className={linkStyle}>Terminal</a>
-          <a href="/workspace" className={linkStyle}>Workspace</a>
-          <a href="/browser-studio/index.html" className={linkStyle}>Studio</a>
-          <button type="button" onClick={() => setMobileHistory((v) => !v)} className={`md:hidden ${buttonStyle}`}>History</button>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="hidden items-center gap-1.5 text-xs text-zinc-400 lg:flex"><ShieldCheck className="size-4 text-cyan-400" /> Private</span>
+          <a href="/terminal" className={`hidden md:inline-flex ${linkStyle}`}>Terminal</a>
+          <a href="/workspace" className={`hidden md:inline-flex ${linkStyle}`}>Projects</a>
+          <a href="/browser-studio/index.html" className={`hidden md:inline-flex ${linkStyle}`}>Studio</a>
+          {authenticated === true && (
+            <>
+              <button type="button" onClick={createNewChat} disabled={busy} className={`inline-flex items-center gap-1.5 ${buttonStyle}`} aria-label="Start new chat"><Plus className="size-4" /><span className="hidden sm:inline">New chat</span></button>
+              <button type="button" onClick={() => setMobileHistory((v) => !v)} disabled={busy} aria-expanded={mobileHistory} aria-controls="pinai-chat-history" className={`inline-flex items-center gap-1.5 md:hidden ${buttonStyle}`}>{mobileHistory ? <X className="size-4" /> : <History className="size-4" />}<span>{mobileHistory ? "Close" : "History"}</span></button>
+            </>
+          )}
         </div>
       </header>
       <div className="mx-auto flex w-full max-w-[1500px] flex-1 overflow-hidden">
-        <aside className={`${mobileHistory ? "flex" : "hidden"} w-full shrink-0 flex-col border-r border-white/10 bg-[#0a1120] p-4 md:flex md:w-72`}>
+        <aside id="pinai-chat-history" aria-label="Conversation history" className={`${mobileHistory ? "flex" : "hidden"} w-full shrink-0 flex-col border-r border-white/10 bg-[#0a1120] p-4 md:flex md:w-72`}>
           <button type="button" className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-700 p-3 text-sm font-semibold text-white transition hover:bg-cyan-600 disabled:opacity-50" disabled={busy || ready !== true} onClick={createNewChat}><Plus className="size-4" /> New conversation</button>
           <h2 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">Recent chats</h2>
           <div className="flex-1 space-y-1 overflow-y-auto">

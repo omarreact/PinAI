@@ -164,7 +164,7 @@ export function TerminalApp() {
   }
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-background text-foreground">
+    <div className="pinai-mobile-screen flex h-dvh overflow-hidden bg-background text-foreground">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-border md:flex">
         <div className="safe-top px-4 py-5">
           <div className="flex items-center gap-2">
@@ -226,7 +226,7 @@ export function TerminalApp() {
             <div className="text-sm font-medium">{engine.name}</div>
             <div className="text-xs text-muted">{busy ? "Running" : "Idle"}</div>
           </div>
-          <a href="/browser-studio/index.html" className="press inline-flex h-11 items-center rounded-md border border-border bg-card px-3 text-xs font-medium text-signal hover:border-signal" aria-label="Open Browser Studio">
+          <a href="/browser-studio/index.html" className="press hidden h-11 items-center rounded-md border border-border bg-card px-3 text-xs font-medium text-signal hover:border-signal md:inline-flex" aria-label="Open Browser Studio">
             Browser
           </a>
           <button

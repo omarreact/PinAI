@@ -157,3 +157,46 @@
     transform: none;
   }
 }
+
+/* Shared four-tab mobile navigation. Content never sits beneath the bar. */
+.pinai-mobile-nav { display: none; }
+@media (max-width: 767px) {
+  .pinai-mobile-nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 60;
+    height: calc(72px + env(safe-area-inset-bottom));
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(255, 255, 255, .13);
+    background: rgba(12, 20, 34, .98);
+    box-shadow: 0 -5px 22px rgba(0, 0, 0, .3);
+  }
+  .pinai-nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 48px;
+    min-width: 0;
+    border-radius: 12px;
+    color: #aeb9c7;
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .pinai-nav-link svg { width: 20px; height: 20px; }
+  .pinai-nav-link[aria-current="page"] {
+    color: #67e8f9;
+    background: rgba(8, 145, 178, .18);
+  }
+  .pinai-nav-link:focus-visible { outline: 2px solid #67e8f9; outline-offset: -2px; }
+  .pinai-main-screen { min-height: 100dvh; padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  .pinai-mobile-screen { height: calc(100dvh - 72px - env(safe-area-inset-bottom)); }
+}
